@@ -9,6 +9,8 @@ use App\Models\Table;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Component;
+use Midtrans\Config;
+use Midtrans\Snap;
 
 class OrderLivewire extends Component
 {
@@ -51,41 +53,61 @@ class OrderLivewire extends Component
 
     public function placeOrder()
     {
+        // Validasi keranjang
         if (empty($this->cart)) {
-            session()->flash('error', 'Keranjang kosong.');
+            session()->flash('message', 'Keranjang kosong.');
             return;
         }
 
-        DB::beginTransaction();
+        // Simpan order
+        $order = Order::create([
+            'uuid' => Str::uuid(),
+            'table_id' => $this->table->id,
+            'status' => 'pending', // atau sesuai enum kamu
+            'total_price' => collect($this->cart)->sum(fn($item) => $item['qty'] * $item['price']),
+        ]);
 
-        try {
-            $order = Order::create([
-                'uuid' => Str::uuid(),
-                'table_id' => $this->table->id,
-                'total' => $this->calculateTotal(),
+        // Simpan item
+        foreach ($this->cart as $menuId => $item) {
+            OrderItem::create([
+                'order_id' => $order->id,
+                'menu_id' => $menuId,
+                'quantity' => $item['qty'],
+                'price' => $item['price'],
+                'total_price' => $item['qty'] * $item['price'],
             ]);
-
-            foreach ($this->cart as $menuId => $item) {
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'menu_id' => $menuId,
-                    'quantity' => $item['qty'],
-                    'total_price' => $item['qty'] * $item['price'],
-                ]);
-            }
-
-            DB::commit();
-
-            // Reset cart
-            $this->cart = [];
-            session()->forget("cart_{$this->table->id}");
-
-            session()->flash('success', 'Pesanan berhasil dikirim.');
-
-        } catch (\Throwable $e) {
-            DB::rollback();
-            session()->flash('error', 'Terjadi kesalahan saat menyimpan pesanan.');
         }
+
+        // Bersihkan keranjang
+        session()->forget("cart_{$this->table->id}");
+        $this->reset('cart');
+
+        // Redirect ke halaman status pesanan
+        return redirect()->route('customer.order.status', ['table' => $this->table->slug]);
+    }
+
+    public function payWithMidtrans()
+    {
+        Config::$serverKey = config('midtrans.server_key');
+        Config::$isProduction = false;
+        Config::$isSanitized = true;
+        Config::$is3ds = true;
+
+        $payload = [
+            'transaction_details' => [
+                'order_id' => 'ORDER-' . now()->timestamp,
+                'gross_amount' => $this->calculateTotal(),
+            ],
+            'customer_details' => [
+                'first_name' => 'Customer',
+                'email' => 'customer@example.com',
+            ],
+            'enabled_payments' => ['qris'],
+        ];
+
+        $snapUrl = Snap::createTransaction($payload)->redirect_url;
+
+        return redirect()->away($snapUrl);
     }
 
     private function calculateTotal()

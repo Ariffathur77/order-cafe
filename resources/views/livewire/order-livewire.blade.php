@@ -46,10 +46,13 @@
         @endforelse
     </div>
 
+
     <!-- Tombol QRIS -->
     <button wire:click="payWithMidtrans" class="bg-green-500 text-white px-4 py-2 rounded">
         Bayar dengan QRIS
     </button>
+
+
 
     <div class="text-right font-bold text-lg mb-4">
         Total: Rp {{ number_format(array_sum(array_map(fn($item) => $item['qty'] * $item['price'], $cart))) }}

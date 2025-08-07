@@ -10,6 +10,10 @@ class OrderStatusController extends Controller
     public function show($uuid)
     {
         $order = Order::where('uuid', $uuid)->with('items.menu', 'table')->firstOrFail();
-        return view('order.status', compact('order'));
+
+        return view('livewire.customer.order-status-livewire', [
+            'order' => $order,
+            'table' => $order->table,
+        ]);
     }
 }

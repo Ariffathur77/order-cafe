@@ -25,22 +25,18 @@ Route::get('/admin/orders', function () {
     return view('admin.orders', compact('orders'));
 })->name('admin.orders');
 
-Route::get('/order/by-table/{slug}', function ($slug) {
-    $table = \App\Models\Table::where('slug', $slug)->firstOrFail();
-    return redirect()->route('order.page', $table->slug);
-})->name('order.by-table');
-
 Route::get('/order/{slug}', function ($slug) {
     $table = Table::where('slug', $slug)->firstOrFail();
     return view('order', ['table' => $table]);
-});
+})->name('order.by-table');
 
 Route::get('/order-monitor-page', function () {
     return view('order-monitor-page');
 })->name('admin.order-monitor');
 
+Route::get('/order-status/{uuid}', [OrderStatusController::class, 'show'])->name('order.status');
 Route::get('/admin/struk/{order}', [StrukController::class, 'show'])->name('admin.struk.show');
 Route::get('/meja/{table:slug}', OrderStatusLivewire::class)->name('customer.order.status');
 Route::get('/struk/{order}', [StrukController::class, 'show'])->name('struk.show');
-Route::get('/order-status/{uuid}', [OrderStatusController::class, 'show'])->name('order.status');
 Route::post('/payment/token', [PaymentController::class, 'token'])->name('payment.token');
+

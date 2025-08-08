@@ -10,27 +10,21 @@ class PaymentController extends Controller
 {
     public function token(Request $request)
     {
-        $serverKey = config('services.midtrans.server_key');
-        dd($serverKey);
         Config::$serverKey = config('services.midtrans.server_key');
-        Config::$isProduction = false; // true kalau sudah live
+        Config::$isProduction = config('services.midtrans.is_production');
         Config::$isSanitized = true;
         Config::$is3ds = true;
 
-        $order_id = $request->order_id;
-        $gross_amount = (int) $request->gross_amount;
-
         $params = [
             'transaction_details' => [
-                'order_id' => $order_id,
-                'gross_amount' => $gross_amount,
+                'order_id' => $request->order_id,
+                'gross_amount' => (int) $request->gross_amount,
             ],
-            'qris' => [
-                'acquirer' => 'gopay' // atau bisa dikosongkan
-            ]
+            'enabled_payments' => ['qris'],
         ];
 
         $snapToken = Snap::getSnapToken($params);
+
         return response()->json(['token' => $snapToken]);
     }
 }

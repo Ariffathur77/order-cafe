@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Table;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Livewire\Component;
 use Midtrans\Config;
@@ -88,24 +89,23 @@ class OrderLivewire extends Component
 
     public function payWithMidtrans()
     {
-        Config::$serverKey = config('midtrans.server_key');
-        Config::$isProduction = false;
+        Config::$serverKey = config('services.midtrans.server_key');
+        Config::$isProduction = config('services.midtrans.is_production');
         Config::$isSanitized = true;
         Config::$is3ds = true;
 
-        $payload = [
+        $orderId = 'ORDER-' . now()->timestamp;
+        $grossAmount = $this->calculateTotal();
+
+        $params = [
             'transaction_details' => [
-                'order_id' => 'ORDER-' . now()->timestamp,
-                'gross_amount' => $this->calculateTotal(),
-            ],
-            'customer_details' => [
-                'first_name' => 'Customer',
-                'email' => 'customer@example.com',
+                'order_id' => $orderId,
+                'gross_amount' => $grossAmount,
             ],
             'enabled_payments' => ['qris'],
         ];
 
-        $snapUrl = Snap::createTransaction($payload)->redirect_url;
+        $snapUrl = Snap::createTransaction($params)->redirect_url;
 
         return redirect()->away($snapUrl);
     }

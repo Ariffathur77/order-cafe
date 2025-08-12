@@ -25,6 +25,16 @@ class MenuResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
     protected static ?int $navigationSort = 2;
 
+    public static function getModelLabel(): string
+    {
+        return 'Menu'; // singular
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return 'Menu'; // plural juga kalau mau
+    }
+
     public static function form(Form $form): Form
     {
         return $form

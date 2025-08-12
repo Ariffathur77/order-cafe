@@ -26,8 +26,8 @@ class TableResource extends Resource
     {
         return $form
             ->schema([
-                TextInput::make('name')->required()->numeric(),
-                TextInput::make('slug')->required()->numeric(),
+                TextInput::make('name')->required(),
+                TextInput::make('slug')->required(),
             ]);
     }
 

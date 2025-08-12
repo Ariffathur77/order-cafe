@@ -38,5 +38,4 @@ Route::get('/order-status/{uuid}', [OrderStatusController::class, 'show'])->name
 Route::get('/admin/struk/{order}', [StrukController::class, 'show'])->name('admin.struk.show');
 Route::get('/meja/{table:slug}', OrderStatusLivewire::class)->name('customer.order.status');
 Route::get('/struk/{order}', [StrukController::class, 'show'])->name('struk.show');
-Route::post('/payment/token', [PaymentController::class, 'token'])->name('payment.token');
 

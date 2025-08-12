@@ -52,6 +52,26 @@ class OrderLivewire extends Component
         session()->put("cart_{$this->table->id}", $this->cart);
     }
 
+    public function increaseQty($menuId)
+    {
+        if (isset($this->cart[$menuId])) {
+            $this->cart[$menuId]['qty']++;
+            session()->put("cart_{$this->table->id}", $this->cart);
+        }
+    }
+
+    public function decreaseQty($menuId)
+    {
+        if (isset($this->cart[$menuId]) && $this->cart[$menuId]['qty'] > 1) {
+            $this->cart[$menuId]['qty']--;
+            session()->put("cart_{$this->table->id}", $this->cart);
+        } else {
+            // kalau qty sudah 1 dan dikurangin, hapus item
+            unset($this->cart[$menuId]);
+            session()->put("cart_{$this->table->id}", $this->cart);
+        }
+    }
+
     public function placeOrder()
     {
         // Validasi keranjang
@@ -85,29 +105,6 @@ class OrderLivewire extends Component
 
         // Redirect ke halaman status pesanan
         return redirect()->route('customer.order.status', ['table' => $this->table->slug]);
-    }
-
-    public function payWithMidtrans()
-    {
-        Config::$serverKey = config('services.midtrans.server_key');
-        Config::$isProduction = config('services.midtrans.is_production');
-        Config::$isSanitized = true;
-        Config::$is3ds = true;
-
-        $orderId = 'ORDER-' . now()->timestamp;
-        $grossAmount = $this->calculateTotal();
-
-        $params = [
-            'transaction_details' => [
-                'order_id' => $orderId,
-                'gross_amount' => $grossAmount,
-            ],
-            'enabled_payments' => ['qris'],
-        ];
-
-        $snapUrl = Snap::createTransaction($params)->redirect_url;
-
-        return redirect()->away($snapUrl);
     }
 
     private function calculateTotal()

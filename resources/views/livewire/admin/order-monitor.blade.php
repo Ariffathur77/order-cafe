@@ -1,4 +1,4 @@
-    <div wire:poll.5s class="p-4 space-y-4 max-w-4xl mx-auto">
+    <div wire:poll.5s="checkNewOrders" class="p-4 space-y-4 max-w-4xl mx-auto">
         <h1 class="text-2xl font-bold mb-4">Monitoring Pesanan</h1>
 
         @forelse ($orders as $order)
@@ -36,6 +36,35 @@
                         </li>
                     @endforeach
                 </ul>
+                <div x-data="{ show: false, message: '' }" x-show="show" x-text="message"
+                    class="fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow-lg transition-opacity duration-500"
+                    x-transition style="display: none;" x-init="window.addEventListener('showAlert', event => {
+                        message = event.detail.message;
+                        show = true;
+                        setTimeout(() => show = false, 3000); // Hilang setelah 3 detik
+                    });"></div>
+
+                <script>
+                    // window.addEventListener('playSound', () => {
+                    //     document.getElementById('notifSound').play();
+                    // });
+                    window.addEventListener('showAlert', event => {
+                        // Tampilkan toast
+                        let toast = document.createElement('div');
+                        toast.innerText = event.detail.message;
+                        toast.className = "fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow";
+                        document.body.appendChild(toast);
+
+                        // Hapus setelah 3 detik
+                        setTimeout(() => {
+                            toast.remove();
+                        }, 3000);
+
+                        // Putar suara
+                        let audio = new Audio('/sounds/notif.wav');
+                        audio.play().catch(err => console.log("Suara gagal diputar:", err));
+                    });
+                </script>
             </div>
         @empty
             <div class="text-center text-gray-500 py-10">

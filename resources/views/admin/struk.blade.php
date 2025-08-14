@@ -40,7 +40,8 @@
 
         @media print {
             .no-print {
-                display: none;
+                display: none !important;
+                /* Hilangkan semua elemen yang punya class no-print */
             }
         }
     </style>
@@ -68,7 +69,19 @@
 
         <div class="item total">
             <span>Total</span>
-            <span>Rp {{ number_format($order->items->sum('total_price'), 0, ',', '.') }}</span>
+            <span id="total">
+                Rp {{ number_format($order->items->sum('total_price'), 0, ',', '.') }}
+            </span>
+        </div>
+
+        <div class="line"></div>
+
+        <!-- Bagian kalkulator (tidak ikut dicetak) -->
+        <div class="no-print">
+            <label>Bayar:
+                <input type="number" id="bayar" placeholder="Masukkan jumlah bayar">
+            </label>
+            <p>Kembalian: <span id="kembalian">Rp 0</span></p>
         </div>
 
         <div class="line"></div>
@@ -76,10 +89,28 @@
         <p class="text-center">Terima kasih!</p>
     </div>
 
+    <!-- Tombol cetak dan kembali (tidak ikut dicetak) -->
     <div class="text-center no-print" style="margin-top: 20px;">
         <button onclick="window.print()">🖨️ Cetak</button>
         <a href="{{ url()->previous() }}">🔙 Kembali</a>
     </div>
+
+    <script>
+        let total = {{ $order->items->sum('total_price') }};
+        let bayarInput = document.getElementById('bayar');
+        let kembalianSpan = document.getElementById('kembalian');
+
+        // Isi otomatis jumlah bayar = total
+        bayarInput.value = total;
+        kembalianSpan.textContent = "Rp 0";
+
+        // Hitung kembalian setiap kali input berubah
+        bayarInput.addEventListener('input', function() {
+            let bayar = parseInt(this.value) || 0;
+            let kembalian = bayar - total;
+            kembalianSpan.textContent = "Rp " + kembalian.toLocaleString('id-ID');
+        });
+    </script>
 
 </body>
 
